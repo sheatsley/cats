@@ -49,7 +49,7 @@ def assemble(parts, database='database.pkl'):
           idx = bi*np.prod(b['weapons', 'wheels', 'utilities']) + wi*np.prod(b['wheels', 'utilities']) + hi*b['utilities'] + ui
 
           # store CATS configuration
-          cats[idx] = [b['type'], ' '.join(w['type']), ' '.join(h['type']), ' '.join(u['type'], health, damage, energy]
+          cats[idx] = [b['type'], ' '.join(w['type']), ' '.join(h['type']), ' '.join(u['type']), health, damage, energy]
 
   return scores
 
@@ -64,7 +64,25 @@ def bonus(parts)
   - utility: bodies, weapons
   """
 
-  return
+  return None
+
+def load(plist='parts.txt'):
+  """
+  Helper function to write to the parts database from a text file
+  """
+  import csv
+
+  try:
+    with open(plist, 'r') as f:
+      parts = csv.reader(f)
+      print(plist, 'read')
+  except FileNotFoundError:
+    print('Unable to find', database)
+    raise SystemExit(-1)
+
+  # call write() to add to parts database
+  write(parts)
+  return 0
 
 
 def write(parts, database='database.pkl', init_size=50):
@@ -105,4 +123,4 @@ def write(parts, database='database.pkl', init_size=50):
   with open(database, 'wb') as f:
     pickle.dump(db, f, pickle.HIGHEST_PROTOCOL)
     print(db, 'saved')
-  return
+  return 0
