@@ -27,7 +27,7 @@ def assemble(database='database.pkl'):
     raise SystemExit(-1)
 
   # find number of parts for each type and compute upper bound
-  nbods, nweaps, nwheels, ngads = [min(np.argwhere('nan' == db[p]['type'])) for p in db]
+  nbods, nweaps, nwheels, ngads = [int(np.argwhere('nan' == db[p]['type'])[0]) for p in db]
   bound = nbods*(nweaps**max(db['body']['weapons']))*(nwheels**max(db['body']['wheels']))*(ngads**max(db['body']['gadgets']))
 
   # compute CATS configurations
@@ -118,7 +118,7 @@ def write(parts, database='database.pkl', init_size=50):
 
     # find next free entry
     try:
-      idx = min(np.argwhere('nan' == (db[p[0]]['type'])))
+      idx = int(np.argwhere('nan' == (db[p[0]]['type']))[0]))
     except ValueError:
       idx = 0
     
