@@ -28,31 +28,43 @@ def assemble(database='database.pkl'):
 
   # find number of parts for each type and compute upper bound
   nbods, nweaps, nwheels, ngads = [int(np.argwhere('nan' == db[p]['type'])[0]) for p in db]
-  bound = nbods*(nweaps**max(db['body']['weapons']))*(nwheels**max(db['body']['wheels']))*(ngads**max(db['body']['gadgets']))
+  bound = int(sum([np.prod([binomial_coeff(n, k) for n,k in zip([nweaps, nwheels, ngads], db['body'][i][['weapons', 'wheels', 'gadgets']])]) for i in range(nbods)]))
 
   # compute CATS configurations
-  cats = np.full([bound, 1, 1, 1, 1, 1, 1], np.nan, dtype=(
-    [('body', 'U6'), ('weapons', 'U18'), ('wheels', 'U21'), ('gadgets', 'U18'), ('health', 'f2'), ('damage', 'f2'), ('energy', 'f2')]))
-  for bi, b in enumerate(db['body']):
+  cats = np.full(bound, np.nan, dtype=(
+    [('body', 'U7'), ('weapons', 'U26'), ('wheels', 'U21'), ('gadgets', 'U18'), ('health', 'f2'), ('damage', 'f2'), ('energy', 'f2')]))
+  for bi, b in enumerate(db['body'][:nbods]):
 
     # compute combinations of parts
-    weapons = it.combinations(range(nweaps), b['weapons'])
-    wheels = it.combinations(range(nwheels), b['wheels'])
-    gadgets = it.combinations(range(ngads), b['gadgets'])
+    weapons = map(list, it.chain.from_iterable(it.combinations(range(nweaps), slots) for slots in range(int(b['weapons'])+1)))
+    wheels = map(list, it.chain.from_iterable(it.combinations(range(nwheels), slots) for slots in range(int(b['wheels'])+1)))
+    gadgets = map(list, it.chain.from_iterable(it.combinations(range(ngads), slots) for slots in range(int(b['gadgets'])+1)))
 
     # compute attributes and index
     for wi, w in enumerate(weapons):
       for hi, h in enumerate(wheels):
         for gi, u in enumerate(gadgets):
-          health = b['health'] + sum(db['wheels'][w, 'health']) + sum(db['gadgets'][u, 'health'])
-          damage = sum(db['weapons'][w, 'damage'])
-          energy = b['energy'] - sum(db['weapons'][w, 'energy']) - sum(db['gadgets'][u, 'energy'])
-          idx = bi*np.prod(b['weapons', 'wheels', 'gadgets']) + wi*np.prod(b['wheels', 'gadgets']) + hi*b['gadgets'] + gi
+          health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][u]['health'])
+          damage = np.sum(db['weapon'][w]['damage'])
+          energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][u]['energy'])
+          idx = int(bi*np.prod(b[['weapons', 'wheels', 'gadgets']].astype(list)) + wi*np.prod(b[['wheels', 'gadgets']].astype(list)) + hi*b['gadgets'] + gi)
 
           # store CATS configuration
-          cats[idx] = [b['type'], ' '.join(w['type']), ' '.join(h['type']), ' '.join(u['type']), health, damage, energy]
+          cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][u]['type']), health, damage, energy])
+
+  # show 
+  print('weewoo')
+  pass
 
   return scores
+
+
+def binomial_coeff(n, k):
+  """
+  Math is fun (Thanks Adrien and Eric)
+  """
+  import math as mh
+  return mh.factorial(n+k)/(mh.factorial(k)*mh.factorial(n))
 
 
 def bonus(parts):
@@ -118,7 +130,7 @@ def write(parts, database='database.pkl', init_size=50):
 
     # find next free entry
     try:
-      idx = int(np.argwhere('nan' == (db[p[0]]['type']))[0]))
+      idx = int(np.argwhere('nan' == (db[p[0]]['type']))[0])
     except ValueError:
       idx = 0
     
