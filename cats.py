@@ -4,6 +4,14 @@ Ryan Sheatsley
 """
 
 
+def binomial_coeff(n, k):
+  """
+  Math is fun (Thanks Adrien and Eric)
+  """
+  import math as mh
+  return mh.factorial(n+k)/(mh.factorial(k)*mh.factorial(n))
+
+
 def assemble(database='database.pkl'):
   """
   Exhaustively compute CATS combinations from the parts database
@@ -31,14 +39,15 @@ def assemble(database='database.pkl'):
   bound = int(sum([np.prod([binomial_coeff(n, k) for n,k in zip([nweaps, nwheels, ngads], db['body'][i][['weapons', 'wheels', 'gadgets']])]) for i in range(nbods)]))
 
   # compute CATS configurations
+  idx = 0
   cats = np.full(bound, np.nan, dtype=(
     [('body', 'U7'), ('weapons', 'U26'), ('wheels', 'U21'), ('gadgets', 'U18'), ('health', 'f2'), ('damage', 'f2'), ('energy', 'f2')]))
   for bi, b in enumerate(db['body'][:nbods]):
 
     # compute combinations of parts
-    weapons = map(list, it.chain.from_iterable(it.combinations(range(nweaps), slots) for slots in range(int(b['weapons'])+1)))
-    wheels = map(list, it.chain.from_iterable(it.combinations(range(nwheels), slots) for slots in range(int(b['wheels'])+1)))
-    gadgets = map(list, it.chain.from_iterable(it.combinations(range(ngads), slots) for slots in range(int(b['gadgets'])+1)))
+    weapons = list(map(list, it.chain.from_iterable(it.combinations(range(nweaps), slots) for slots in range(int(b['weapons'])+1))))
+    wheels = list(map(list, it.chain.from_iterable(it.combinations(range(nwheels), slots) for slots in range(int(b['wheels'])+1))))
+    gadgets = list(map(list, it.chain.from_iterable(it.combinations(range(ngads), slots) for slots in range(int(b['gadgets'])+1))))
 
     # compute attributes and index
     for wi, w in enumerate(weapons):
@@ -47,24 +56,12 @@ def assemble(database='database.pkl'):
           health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][u]['health'])
           damage = np.sum(db['weapon'][w]['damage'])
           energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][u]['energy'])
-          idx = int(bi*np.prod(b[['weapons', 'wheels', 'gadgets']].astype(list)) + wi*np.prod(b[['wheels', 'gadgets']].astype(list)) + hi*b['gadgets'] + gi)
+          #TODO incorporate bonus() here
 
           # store CATS configuration
           cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][u]['type']), health, damage, energy])
-
-  # show 
-  print('weewoo')
-  pass
-
-  return scores
-
-
-def binomial_coeff(n, k):
-  """
-  Math is fun (Thanks Adrien and Eric)
-  """
-  import math as mh
-  return mh.factorial(n+k)/(mh.factorial(k)*mh.factorial(n))
+          idx += 1
+  return cats[:idx]
 
 
 def bonus(parts):
@@ -78,6 +75,34 @@ def bonus(parts):
   """
 
   return None
+
+
+def score(cats, hweight=1., dweight=1., display=50):
+  """
+  Computes scores for CATS vehicles and displays them
+  CATS field layout:
+  body, weapons,  wheels, gadgets, health, damage, energy
+  """
+  import numpy as np
+
+  # calculate the score for each CATS vehicle and sort
+  scores = np.heaviside(cats['energy'], 1)*np.sum((hweight*cats['health'], dweight*cats['damage']), axis=0, dtype=int)
+  best = np.argsort(scores)
+
+  # determine max field length for pretty printing
+  mbods, mweaps, mwheels, mgads = [len(str(max(cats[best[:-display:-1]][field], key=len))) for field in cats.dtype.names[:4]]
+  mhp, mdmg, meng  = [len(str(max(cats[best[:-display:-1]][field].astype(int)))) for field in cats.dtype.names[4:]]
+  mscore = len(str(scores[best[-1]].astype(int)))
+  fields = list(zip(cats.dtype.names, (mbods, mweaps, mwheels, mgads, mhp, mdmg, meng)))
+
+  # print the top scores (index body weapons wheels gadgets health damage energy score)
+  print('Crash Arena Turbo Stars'.center(mbods + mweaps + mwheels + mgads + mhp + mdmg + meng + mscore + 8))
+  print('{:s}'.format('\u0332'.join(' '.join(('idx'[:len(str(display))], *[field[:flen].center(flen) for field, flen in fields], 'score'[:mscore].center(mscore))))))
+  [print(str(idz+1).rjust(len(str(display))), 
+    *[cats[idx][field].astype(str).ljust(flen) if idy < 4 else cats[idx][field].astype(int).astype(str).ljust(flen) for idy, (field, flen) in enumerate(fields)], 
+    scores[idx].astype(int)) for idz, idx in enumerate(best[:-display:-1])]
+  return 0
+
 
 def load(plist='parts.txt'):
   """
@@ -155,5 +180,5 @@ if __name__ == '__main__':
   Create a parts database and return optimal CATS configurations
   """
   load()
-  assemble()
+  score(assemble())
   raise SystemExit(0)
