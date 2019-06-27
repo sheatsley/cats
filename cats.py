@@ -12,6 +12,69 @@ def binomial_coeff(n, k):
   return mh.factorial(n+k)/(mh.factorial(k)*mh.factorial(n))
 
 
+def bonus(body, weapons, wheels, gadgets):
+  """
+  Computes bonus attributes from parts
+  Part modification relations:
+  - body:   weapons, wheels, gadgets
+  - weapon: bodies, weapons(themselves), wheels, gadgets
+  - wheel:  bodies
+  - gadget: bodies, weapons
+  """
+  import numpy as np
+  
+  # check body bonuses
+  health, damage = (0, 0)
+  if body['bonus'] != 'nan':
+
+    # body-to-weapon bonuses increase damage
+    for w in weapons:
+      if w['type'] == body['bonus']:
+        damage += w['damage'] * body['modifier']
+
+    # body-to-wheel/gadget bonuses increase health
+    for hg in np.concatenate((wheels[['type', 'health']], gadgets[['type', 'health']])):
+      if hg['type'] == body['bonus']:
+        health += hg['health'] * body['modifier']
+
+  # check weapon bonuses
+  for w in weapons:
+    if w['bonus'] != 'nan':
+      part, attribute = w['bonus'].split('-')
+      for bhg in np.concatenate(([body[['type', 'health']]], wheels[['type', 'health']], gadgets[['type', 'health']])):
+        if bhg['type'] == part:
+
+          # weapon-on-body bonuses increase damage
+          if 'damage' == attribute: 
+            damage += w['damage'] * w['modifier']
+
+          # weapon-to-body/wheel/gadget bonuses increase health
+          else:
+            health += bhg['health'] * w['modifier']
+
+  # check wheel bonuses
+  for h in wheels:
+    if h['bonus'] != 'nan':
+
+      # wheel-to-body bonuses increase health
+      if body['type'] == h['bonus']:
+        health += body['health'] * h['modifier']
+
+  # check gadget bonuses
+  for g in gadgets:
+    if g['bonus'] != 'nan':
+
+      # gadget-to-weapon bonuses increase damage
+      for w in weapons:
+        if w['type'] == g['bonus']:
+          damage += w['damage'] * g['modifier']
+
+      # gadget-to-body bonuses increase health
+      if body['type'] == g['bonus']:
+        health += body['health'] * g['modifier']
+  return health, damage 
+
+
 def assemble(database='database.pkl'):
   """
   Exhaustively compute CATS combinations from the parts database
@@ -50,31 +113,23 @@ def assemble(database='database.pkl'):
     gadgets = list(map(list, it.chain.from_iterable(it.combinations(range(ngads), slots) for slots in range(int(b['gadgets'])+1))))
 
     # compute attributes and index
-    for wi, w in enumerate(weapons):
-      for hi, h in enumerate(wheels):
-        for gi, u in enumerate(gadgets):
-          health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][u]['health'])
+    for w in weapons:
+      for h in wheels:
+        for g in gadgets:
+          health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][g]['health'])
           damage = np.sum(db['weapon'][w]['damage'])
-          energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][u]['energy'])
-          #TODO incorporate bonus() here
+          energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][g]['energy'])
+
+          # compute bonus attributes
+          if b['bonus'] != 'nan' or (db['weapon'][w]['bonus'] != 'nan').any() or (db['wheel'][h]['bonus'] != 'nan').any() or (db['gadget'][g]['bonus'] != 'nan').any():
+            bhealth, bdamage = bonus(b, db['weapon'][w], db['wheel'][h], db['gadget'][g])
+            health += bhealth
+            damage += bdamage
 
           # store CATS configuration
-          cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][u]['type']), health, damage, energy])
+          cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][g]['type']), health, damage, energy])
           idx += 1
   return cats[:idx]
-
-
-def bonus(parts):
-  """
-  Computes bonus attributes from parts
-  Part modification relations:
-  - body:   wheels, weapons
-  - weapon: bodies
-  - wheel:  bodies
-  - gadget: bodies, weapons
-  """
-
-  return None
 
 
 def score(cats, hweight=1., dweight=1., display=50):
@@ -104,7 +159,7 @@ def score(cats, hweight=1., dweight=1., display=50):
   return 0
 
 
-def load(plist='parts.txt'):
+def load(plist='parts.txt', comment='#'):
   """
   Helper function to write to the parts database from a text file
   """
@@ -113,6 +168,7 @@ def load(plist='parts.txt'):
   try:
     with open(plist, 'r') as f:
       parts = list(csv.reader(f, skipinitialspace=True))
+      parts = [p for p in parts if not p[0].startswith(comment)]
       print(plist, 'read')
   except FileNotFoundError:
     print('Unable to find', database)
@@ -136,10 +192,10 @@ def write(parts, database='database.pkl', init_size=50):
   import pickle as pk
 
   # load (or create) the parts database
-  fields = {'body':   [('type', 'U7'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U12'), ('modifier', 'f2')], 
-            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U12'), ('modifier', 'f2')], 
-            'wheel':  [('type', 'U7'), ('health', 'f2'), ('bonus', 'U12'), ('modifier', 'f2')], 
-            'gadget': [('type', 'U9'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U12'), ('modifier', 'f2')]}
+  fields = {'body':   [('type', 'U13'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
+            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
+            'wheel':  [('type', 'U13'), ('health', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
+            'gadget': [('type', 'U13'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')]}
   try:
     with open(database, 'rb') as f:
       db = pk.load(f)
@@ -155,16 +211,16 @@ def write(parts, database='database.pkl', init_size=50):
 
     # find next free entry
     try:
-      idx = int(np.argwhere('nan' == (db[p[0]]['type']))[0])
-    except ValueError:
-      idx = 0
+      idx = int(np.argwhere('nan' == db[p[0]]['type'])[0])
+    except IndexError:
+      idx = db[p[0]].shape[0]
     
     # extend database if necessary
-    if idx + 1 == db[p[0]].shape:
-      db[p[0]] = np.concatenate((db[p[0]], np.full(init_size, np.nan, dtype=fields[p])))
-      print(db, 'extended to', db[p[0]].shape)
+    if idx == db[p[0]].shape[0]:
+      db[p[0]] = np.concatenate((db[p[0]], np.full(init_size, np.nan, dtype=fields[p[0]])))
+      print(database, 'extended to', db[p[0]].shape[0])
 
-    # padd part attributes if needed and write to the next available entry
+    # pad part attributes if needed and write to the next available entry
     db[p[0]][idx] = tuple(np.pad(p[1:], (0, len(fields[p[0]]) - len(p[1:])), 'constant', constant_values=np.nan))
   print(len(parts), 'part(s) added')
 
