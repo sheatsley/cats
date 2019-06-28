@@ -123,6 +123,8 @@ def assemble(database='database.pkl'):
     for w in weapons:
       for h in wheels:
         for g in gadgets:
+          if bi == 14 and w == [15, 16] and h == [2, 4] and g == [3]:
+            import pdb; pdb.set_trace()
           health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][g]['health'])
           damage = np.sum(db['weapon'][w]['damage'])
           energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][g]['energy'])
@@ -147,7 +149,6 @@ def score(cats, hweight=1., dweight=1., display=50, debug=True):
   CATS field layout:
   body, weapons,  wheels, gadgets, health, damage, energy
   """
-  import code as cd
   import numpy as np
 
   # calculate the score for each CATS vehicle and sort
@@ -169,7 +170,11 @@ def score(cats, hweight=1., dweight=1., display=50, debug=True):
 
   # drop to an interactive session if we're debugging
   if debug:
-    code.interact(local=locals())
+    import code as cd
+    import pickle as pk
+    with open('database.pkl', 'rb') as f:
+      db = pk.load(f)
+    cd.interact(local=locals())
   return 0
 
 
@@ -225,10 +230,10 @@ def write(parts, database='database.pkl', init_size=50):
   import pickle as pk
 
   # load (or create) the parts database
-  fields = {'body':   [('type', 'U13'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
-            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
-            'wheel':  [('type', 'U13'), ('health', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')], 
-            'gadget': [('type', 'U13'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U13'), ('modifier', 'f2')]}
+  fields = {'body':   [('type', 'U13'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
+            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
+            'wheel':  [('type', 'U13'), ('health', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
+            'gadget': [('type', 'U13'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')]}
   try:
     with open(database, 'rb') as f:
       db = pk.load(f)
