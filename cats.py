@@ -13,7 +13,7 @@ def binomial_coeff(n, k):
 
   k = min(k, n - k)
   n = ft.reduce(op.mul, range(n, n - k, -1), 1)
-  d = ft.reduce(op.mul, range(1, r + 1), 1)
+  d = ft.reduce(op.mul, range(1, k + 1), 1)
   return n / d
 
 
