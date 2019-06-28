@@ -141,12 +141,13 @@ def assemble(database='database.pkl'):
   return cats[:idx]
 
 
-def score(cats, hweight=1., dweight=1., display=50):
+def score(cats, hweight=1., dweight=1., display=50, debug=False):
   """
   Computes scores for CATS vehicles and displays them
   CATS field layout:
   body, weapons,  wheels, gadgets, health, damage, energy
   """
+  import code as cd
   import numpy as np
 
   # calculate the score for each CATS vehicle and sort
@@ -165,6 +166,10 @@ def score(cats, hweight=1., dweight=1., display=50):
   [print(str(idz+1).rjust(len(str(display))), 
     *[cats[idx][field].astype(str).ljust(flen) if idy < 4 else cats[idx][field].astype(int).astype(str).ljust(flen) for idy, (field, flen) in enumerate(fields)], 
     scores[idx].astype(int)) for idz, idx in enumerate(best[:-display:-1])]
+
+  # drop to an interactive session if we're debugging
+  if debug:
+    code.interact(local=locals())
   return 0
 
 
