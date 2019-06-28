@@ -265,6 +265,9 @@ if __name__ == '__main__':
   """
   Create a parts database and return optimal CATS configurations
   """
+  import code
+
   load()
   score(assemble())
+  code.interact()
   raise SystemExit(0)
