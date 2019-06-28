@@ -123,8 +123,6 @@ def assemble(database='database.pkl'):
     for w in weapons:
       for h in wheels:
         for g in gadgets:
-          if bi == 14 and w == [15, 16] and h == [2, 4] and g == [3]:
-            import pdb; pdb.set_trace()
           health = b['health'] + np.sum(db['wheel'][h]['health']) + np.sum(db['gadget'][g]['health'])
           damage = np.sum(db['weapon'][w]['damage'])
           energy = b['energy'] - np.sum(db['weapon'][w]['energy']) - np.sum(db['gadget'][g]['energy'])
@@ -230,10 +228,10 @@ def write(parts, database='database.pkl', init_size=50):
   import pickle as pk
 
   # load (or create) the parts database
-  fields = {'body':   [('type', 'U13'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
-            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
-            'wheel':  [('type', 'U13'), ('health', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')], 
-            'gadget': [('type', 'U13'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U15'), ('modifier', 'f2')]}
+  fields = {'body':   [('type', 'U13'), ('weapons', 'f2'), ('gadgets', 'f2'), ('wheels', 'f2'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U20'), ('modifier', 'f2')], 
+            'weapon': [('type', 'U13'), ('damage', 'f2'), ('energy', 'f2'), ('bonus', 'U20'), ('modifier', 'f2')], 
+            'wheel':  [('type', 'U13'), ('health', 'f2'), ('bonus', 'U20'), ('modifier', 'f2')], 
+            'gadget': [('type', 'U13'), ('health', 'f2'), ('energy', 'f2'), ('bonus', 'U20'), ('modifier', 'f2')]}
   try:
     with open(database, 'rb') as f:
       db = pk.load(f)
