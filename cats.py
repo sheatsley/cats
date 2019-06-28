@@ -8,8 +8,13 @@ def binomial_coeff(n, k):
   """
   Math is fun (Thanks Adrien and Eric)
   """
-  import math as mh
-  return mh.factorial(n+k)/(mh.factorial(k)*mh.factorial(n))
+  import functools as ft
+  import operator as op
+
+  k = min(k, n - k)
+  n = ft.reduce(op.mul, range(n, n - k, -1), 1)
+  d = ft.reduce(op.mul, range(1, r + 1), 1)
+  return n / d
 
 
 def bonus(body, weapons, wheels, gadgets):
@@ -99,7 +104,9 @@ def assemble(database='database.pkl'):
 
   # find number of parts for each type and compute upper bound
   nbods, nweaps, nwheels, ngads = [int(np.argwhere('nan' == db[p]['type'])[0]) for p in db]
-  bound = int(sum([np.prod([binomial_coeff(n, k) for n,k in zip([nweaps, nwheels, ngads], db['body'][i][['weapons', 'wheels', 'gadgets']])]) for i in range(nbods)]))
+  bound = int(sum([np.prod([sum([binomial_coeff(nweaps, k) for k in range(int(db['body'][i]['weapons']) + 1)]), 
+    sum([binomial_coeff(nwheels, k) for k in range(int(db['body'][i]['wheels']) + 1)]), 
+      sum([binomial_coeff(ngads, k) for k in range(int(db['body'][i]['gadgets']) + 1)])]) for i in range(nbods)]))
 
   # compute CATS configurations
   idx = 0
@@ -129,6 +136,7 @@ def assemble(database='database.pkl'):
           # store CATS configuration
           cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][g]['type']), health, damage, energy])
           idx += 1
+          print(str(int(idx / bound * 100))+'%', end='\r')
   return cats[:idx]
 
 
@@ -164,6 +172,8 @@ def load(plist='parts.txt', comment='#'):
   Helper function to write to the parts database from a text file
   """
   import csv
+  import difflib
+  import pickle as pk
 
   try:
     with open(plist, 'r') as f:
@@ -173,6 +183,23 @@ def load(plist='parts.txt', comment='#'):
   except FileNotFoundError:
     print('Unable to find', database)
     raise SystemExit(-1)
+
+  # compute deltas if this is not the first time
+  try:
+    with open('.'+plist, 'rb') as f:
+      oparts = pk.load(f)
+      loparts = [' '.join(p) for p in oparts]
+      lparts = [' '.join(p) for p in parts]
+      delta = list(difflib.ndiff(loparts, lparts))
+      nparts = [(idx, p[1:].split()) for idx, p in enumerate(delta) if p[0] == '+']
+      for idx, part in nparts:
+        oparts.insert(idx, part)
+      with open('.'+plist, 'wb') as f:
+        pk.dump(oparts, f, pk.HIGHEST_PROTOCOL)
+      parts = nparts
+  except FileNotFoundError:
+    with open('.'+plist, 'wb') as f:
+      pk.dump(parts, f, pk.HIGHEST_PROTOCOL)
 
   # call write() to add to parts database
   write(parts)
@@ -205,8 +232,11 @@ def write(parts, database='database.pkl', init_size=50):
     print(database, 'created')
 
   # add part(s) to the database
-  if not isinstance(parts[0], list):
-    parts = [parts]
+  try:
+    if not isinstance(parts[0], list):
+      parts = [parts]
+  except IndexError:
+    pass
   for p in parts:
 
     # find next free entry
