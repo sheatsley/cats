@@ -111,7 +111,7 @@ def assemble(database='database.pkl'):
   # compute CATS configurations
   idx = 0
   cats = np.full(bound, np.nan, dtype=(
-    [('body', 'U7'), ('weapons', 'U26'), ('wheels', 'U21'), ('gadgets', 'U18'), ('health', 'f2'), ('damage', 'f2'), ('energy', 'f2')]))
+    [('body', 'U7'), ('weapons', 'U26'), ('wheels', 'U21'), ('gadgets', 'U18'), ('health', 'f2'), ('damage', 'f2'), ('energy', 'f2'), ('indicies', 'U28')]))
   for bi, b in enumerate(db['body'][:nbods]):
 
     # compute combinations of parts
@@ -134,7 +134,8 @@ def assemble(database='database.pkl'):
             damage += bdamage
 
           # store CATS configuration
-          cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][g]['type']), health, damage, energy])
+          cats[idx] = tuple([b['type'], ' '.join(db['weapon'][w]['type']), ' '.join(db['wheel'][h]['type']), ' '.join(db['gadget'][g]['type']), health, damage, energy,
+            ''.join(str((bi, w, h, g)))])
           idx += 1
           print(str(int(idx / bound * 100))+'%', end='\r')
   return cats[:idx]
