@@ -196,7 +196,7 @@ def load(plist='parts.txt', comment='#'):
         oparts.insert(idx, part)
       with open('.'+plist, 'wb') as f:
         pk.dump(oparts, f, pk.HIGHEST_PROTOCOL)
-      parts = nparts
+      parts = [part for idx, part in nparts]
   except FileNotFoundError:
     with open('.'+plist, 'wb') as f:
       pk.dump(parts, f, pk.HIGHEST_PROTOCOL)
