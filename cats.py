@@ -141,7 +141,7 @@ def assemble(database='database.pkl'):
   return cats[:idx]
 
 
-def score(cats, hweight=1., dweight=1., display=50, debug=False):
+def score(cats, hweight=1., dweight=1., display=50, debug=True):
   """
   Computes scores for CATS vehicles and displays them
   CATS field layout:
@@ -156,7 +156,7 @@ def score(cats, hweight=1., dweight=1., display=50, debug=False):
 
   # determine max field length for pretty printing
   mbods, mweaps, mwheels, mgads = [len(str(max(cats[best[:-display:-1]][field], key=len))) for field in cats.dtype.names[:4]]
-  mhp, mdmg, meng  = [len(str(max(cats[best[:-display:-1]][field].astype(int)))) for field in cats.dtype.names[4:]]
+  mhp, mdmg, meng  = [len(str(max(cats[best[:-display:-1]][field].astype(int)))) for field in cats.dtype.names[4:7]]
   mscore = len(str(scores[best[-1]].astype(int)))
   fields = list(zip(cats.dtype.names, (mbods, mweaps, mwheels, mgads, mhp, mdmg, meng)))
 
@@ -271,9 +271,7 @@ if __name__ == '__main__':
   """
   Create a parts database and return optimal CATS configurations
   """
-  import code
 
   load()
   score(assemble())
-  code.interact()
   raise SystemExit(0)
