@@ -240,7 +240,7 @@ def assemble(database="database.pkl"):
     return cats[:idx]
 
 
-def score(cats, hweight=1.0, dweight=1.0, display=50, debug=True):
+def score(cats, hweight=1.0, dweight=1.0, display=50, debug=False):
     """
     Computes scores for CATS vehicles and displays them
     CATS field layout:
