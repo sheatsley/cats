@@ -21,7 +21,7 @@ To start off, run `python3 cats.py` to confirm that the required python
 modules are available. Depending on your machine, it can take some time (and
 will give you a sense of computational complexity for a moderate number of
 parts). If everything is successfull, you should see the following output:
-`
+```
 $ python3 cats.py
 parts.txt read
 database.pkl loaded
@@ -34,7 +34,7 @@ i̲d̲ ̲ ̲ ̲b̲o̲d̲y̲ ̲ ̲ ̲ ̲ ̲ ̲w̲e̲a̲p̲o̲n̲s̲ ̲ ̲ ̲ ̲ �
  2 pyramid minigun         sticky roller roller  harpoon  245 210 2 455
  3 pyramid minigun         sticky roller knob    harpoon  235 210 2 445
  4 pyramid minigun         sticky roller roller  harpoon  235 210 2 445
-`
+```
 
 ### Adding parts
 
@@ -57,16 +57,16 @@ Machines](https://catsthegame.fandom.com/wiki/Ultimate_Machines) are not
 properly supported.
 
 You can routinely add parts to `parts.txt` as you obtain them. Note that,
-in the worst case, the runtime is roughly O(&micro;%sum;(&theta;!)), where
+in the worst case, the runtime is roughly O(&micro;&sum;(&theta;!)), where
 &micro; is the number of bodies and &theta; represents the number of weapons,
 wheels, or gadgets. Therefore, regularly scrapping lower-grade parts is highly
 recommended.
 
 ### Emphasizing specific configurations
 
-The "score" of a configuration is a simple weighted sum, given by: `score =
-&theta;<sub>h</sub>*h + &theta;<sub>d</sub>*d` where `h` is the total health,
-`d` is the total weapon damage, `&theta;<sub>h/d</sub>` are the weights
+The "score" of a configuration is a simple weighted sum, given by: `score = `
+&theta;<sub>h</sub>`*h + `&theta;<sub>d</sub>`*d` where `h` is the total
+health, `d` is the total weapon damage, &theta;<sub>h/d</sub> are the weights
 associated with health and damage, respectively. By default, they are set to
 1.0. You can, for example, emphasize damage-heavy configurations by increasing
 `dweight` in the declaration of `score` on line 243 of `cats.py`.
