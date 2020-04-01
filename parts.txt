@@ -1,0 +1,66 @@
+# bodies
+body,classic,1,1,2,81,12
+body,classic,1,1,2,45,11
+body,classic,1,1,2,54,10
+body,titan,1,1,2,126,14
+body,titan,2,1,2,72,7
+body,titan,2,0,2,54,8
+body,titan,2,0,2,54,6
+body,sneaky,2,1,2,108,17
+body,sneaky,3,0,2,48,7
+body,sneaky,1,1,2,36,6
+body,boulder,1,1,2,45,6
+body,whale,1,1,2,120,13,roller,.20
+body,whale,1,2,2,60,7,blade,.10
+body,pyramid,1,1,2,135,12
+body,pyramid,2,1,2,120,13,minigun,1.00
+# weapons
+weapon,double-rocket,37,9,classic-health,.30
+weapon,double-rocket,18,6
+weapon,double-rocket,11,6
+weapon,rocket,17,6
+weapon,rocket,11,5
+weapon,blade,30,8
+weapon,blade,17,6
+weapon,blade,10,5
+weapon,blade,17,7
+weapon,blade,9,5
+weapon,laser,49,10
+weapon,laser,37,9
+weapon,laser,29,8
+weapon,laser,17,6
+weapon,minigun,105,9
+weapon,minigun,50,6
+weapon,minigun,50,6,pyramid-damage,.30
+weapon,minigun,25,5
+weapon,chainsaw,30,5
+weapon,chainsaw,40,6
+weapon,stinger,56,8
+weapon,stinger,74,10
+weapon,stinger,31,6
+weapon,stinger,25,6
+weapon,drill,77,9,classic-damage,.30
+weapon,drill,43,7,surfer-health,.25
+weapon,drill,43,7
+weapon,drill,26,5
+weapon,drill,18,4
+# wheels
+wheel,sticky tire,13
+wheel,scooter,13
+wheel,sticky roller,45,surfer,.25
+wheel,sticky roller,10
+wheel,roller,35,sneaky,.35
+wheel,roller,10,titan,.20
+wheel,knob,25
+wheel,knob,15
+wheel,knob,15
+wheel,knob,10
+wheel,knob,10
+# gadgets
+gadget,harpoon,45,2
+gadget,harpoon,35,2
+gadget,harpoon,35,2
+gadget,harpoon,25,1
+gadget,forklift,45,3
+gadget,forklift,15,2
+gadget,forklift,15,2
