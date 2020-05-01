@@ -232,7 +232,7 @@ def assemble(database="database.pkl"):
                             health,
                             damage,
                             energy,
-                            "".join(str((bi, w, h, g))),
+                            "".join(str(([bi], w, h, g))),
                         ]
                     )
                     idx += 1
@@ -296,10 +296,11 @@ def score(cats, hweight=1.0, dweight=1.0, display=50, debug=False):
                 else cats[idx][field].astype(int).astype(str).ljust(flen)
                 for idy, (field, flen) in enumerate(fields)
             ],
-            scores[idx].astype(int)
+            scores[idx].astype(int),
         )
         for idz, idx in enumerate(best[:-display:-1])
     ]
+    print("")
 
     # drop to an interactive session if we're debugging
     if debug:
@@ -309,6 +310,71 @@ def score(cats, hweight=1.0, dweight=1.0, display=50, debug=False):
         with open("database.pkl", "rb") as f:
             db = pk.load(f)
         cd.interact(local=locals())
+    return best, cats
+
+
+def prune(scores, cats, percentile=25, database="database.pkl"):
+    """
+    Recommends parts to sell that are in the bottom 25% of scores
+    scores layout:
+    body, [weapons], [wheels], [gadgets]
+    """
+    import numpy as np
+    import pickle as pk
+
+    # load the parts databse
+    try:
+        with open(database, "rb") as f:
+            db = pk.load(f)
+            print(database, "loaded")
+    except FileNotFoundError:
+        print("Unable to find", database)
+        raise SystemExit(-1)
+
+    # determine the number of parts to slice the ranking array
+    kinds = ["body", "weapons", "wheels", "gadgets"]
+    num_parts = {k: 0 for k in kinds}
+    for part, db_part in zip(num_parts, db.keys()):
+        num_parts[part] = np.where(db[db_part]["type"] == "nan")[0][0]
+
+    # for each part, we determine its highest ranking
+    rankings = np.full(len(cats), -np.inf, dtype=([(kind, int) for kind in kinds]),)
+    worst = np.full(len(cats), -np.inf, dtype=([(kind, int) for kind in kinds]),)
+    for rank, cat in enumerate(scores):
+        for parts, kind in zip(eval(cats[cat][-1]), kinds):
+            for part in parts:
+                rankings[kind][part] = max(rankings[kind][part], rank)
+
+    # sort based on the rankings
+    for kind in kinds:
+        worst[kind][: num_parts[kind]] = np.argsort(rankings[kind])[-num_parts[kind] :]
+
+    # print out the bottom percentile parts
+    display = int(max(num_parts.values()) * percentile / 100)
+    print(
+        "Bottom", str(percentile) + "%", "of Parts".center(5),
+    )
+    [
+        [
+            print(
+                str(idx + 1).rjust(len(str(display))),
+                " ".join(
+                    [
+                        name + ": " + field.astype(int).astype(str)
+                        if name != "type" and field.astype(str) != "nan"
+                        else name + ": " + field.astype(str)
+                        if field.astype(str) != "nan"
+                        else " "
+                        for name, field in zip(
+                            db[dbk][worst[wk][idx]].dtype.names, db[dbk][worst[wk][idx]]
+                        )
+                    ]
+                ),
+            )
+            for dbk, wk in zip(db.keys(), worst.dtype.names)
+        ]
+        for idx in range(display)
+    ]
     return 0
 
 
@@ -451,5 +517,5 @@ if __name__ == "__main__":
     """
 
     load()
-    score(assemble())
+    prune(*score(assemble()))
     raise SystemExit(0)
