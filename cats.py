@@ -158,7 +158,7 @@ def assemble(database="database.pkl"):
                 ("health", "f2"),
                 ("damage", "f2"),
                 ("energy", "f2"),
-                ("indicies", "U28"),
+                ("indicies", "U32"),
             ]
         ),
     )
@@ -240,7 +240,7 @@ def assemble(database="database.pkl"):
     return cats[:idx]
 
 
-def score(cats, hweight=1.0, dweight=1.0, display=50, debug=False):
+def score(cats, hweight=1.0, dweight=1.0, display=50):
     """
     Computes scores for CATS vehicles and displays them
     CATS field layout:
@@ -301,19 +301,11 @@ def score(cats, hweight=1.0, dweight=1.0, display=50, debug=False):
         for idz, idx in enumerate(best[:-display:-1])
     ]
     print("")
-
-    # drop to an interactive session if we're debugging
-    if debug:
-        import code as cd
-        import pickle as pk
-
-        with open("database.pkl", "rb") as f:
-            db = pk.load(f)
-        cd.interact(local=locals())
     return best, cats
 
 
-def prune(scores, cats, percentile=25, database="database.pkl"):
+
+def prune(scores, cats, percentile=25, database="database.pkl", debug=True):
     """
     Recommends parts to sell that are in the bottom 25% of scores
     scores layout:
@@ -358,10 +350,16 @@ def prune(scores, cats, percentile=25, database="database.pkl"):
         [
             print(
                 str(idx + 1).rjust(len(str(display))),
+                str(int(100 * rankings[wk][worst[wk][idx]] / len(cats))).rjust(2) + "%",
                 " ".join(
                     [
                         name + ": " + field.astype(int).astype(str)
-                        if name != "type" and field.astype(str) != "nan"
+                        if name != "type"
+                        and name != "bonus"
+                        and name != "modifier"
+                        and field.astype(str) != "nan"
+                        else name + ": " + (100 * field).astype(int).astype(str) + "%"
+                        if name == "modifier" and field.astype(str) != "nan"
                         else name + ": " + field.astype(str)
                         if field.astype(str) != "nan"
                         else " "
@@ -375,6 +373,12 @@ def prune(scores, cats, percentile=25, database="database.pkl"):
         ]
         for idx in range(display)
     ]
+
+    # drop to an interactive session if we're debugging
+    if debug:
+        import code as cd
+
+        cd.interact(local=locals())
     return 0
 
 
