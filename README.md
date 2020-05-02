@@ -51,8 +51,8 @@ Parts are parsed as follows:
 - gadgets: type, health, enegy cost, bonus type, bonus modifier
 
 For example, `body, pyramid, 2, 1, 2, 120, 13, minigun, 1.00` describes a
-pyramid body, with 2 weapon slots, 1 gadget slot, 2 wheels, 120 base health,
-and a 100% bonus modifier for miniguns. At this time, [Ultimate
+pyramid body, with 2 weapon slots, 1 gadget slot, 2 wheels, 120 base health, 13
+total energy, and a 100% bonus modifier for miniguns. At this time, [Ultimate
 Machines](https://catsthegame.fandom.com/wiki/Ultimate_Machines) are not
 properly supported.
 
