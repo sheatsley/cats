@@ -48,22 +48,28 @@ def bonus(body, weapons, wheels, gadgets):
     for w in weapons:
         if w["bonus"] != "nan":
             part, attribute = w["bonus"].split("-")
-            for bhg in np.concatenate(
-                (
-                    [body[["type", "health"]]],
-                    wheels[["type", "health"]],
-                    gadgets[["type", "health"]],
-                )
-            ):
-                if bhg["type"] == part:
 
-                    # weapon-on-body bonuses increase damage
-                    if "damage" == attribute:
-                        damage += w["damage"] * w["modifier"]
+            # boomerangs bonuses are unique: they modify weapons, including themselves
+            if part == "weapon":
+                for wep in weapons:
+                    damage += wep["damage"] * w["modifier"]
+            else:
+                for bhg in np.concatenate(
+                    (
+                        [body[["type", "health"]]],
+                        wheels[["type", "health"]],
+                        gadgets[["type", "health"]],
+                    )
+                ):
+                    if bhg["type"] == part:
 
-                    # weapon-to-body/wheel/gadget bonuses increase health
-                    else:
-                        health += bhg["health"] * w["modifier"]
+                        # weapon-on-body bonuses increase damage
+                        if "damage" == attribute:
+                            damage += w["damage"] * w["modifier"]
+
+                        # weapon-to-body/wheel/gadget bonuses increase health
+                        else:
+                            health += bhg["health"] * w["modifier"]
 
     # check wheel bonuses
     for h in wheels:
@@ -236,7 +242,11 @@ def assemble(database="database.pkl"):
                         ]
                     )
                     idx += 1
-                    print(str(int(idx / bound * 100)) + "%", end="\r")
+                    print(
+                        str(int(idx / bound * 100)) + "%",
+                        str(idx) + "/" + str(bound),
+                        end="\r",
+                    )
     return cats[:idx]
 
 
@@ -304,7 +314,6 @@ def score(cats, hweight=1.0, dweight=1.0, display=50):
     return best, cats
 
 
-
 def prune(scores, cats, percentile=25, database="database.pkl", debug=True):
     """
     Recommends parts to sell that are in the bottom 25% of scores
@@ -332,10 +341,13 @@ def prune(scores, cats, percentile=25, database="database.pkl", debug=True):
     # for each part, we determine its highest ranking
     rankings = np.full(len(cats), -np.inf, dtype=([(kind, int) for kind in kinds]),)
     worst = np.full(len(cats), -np.inf, dtype=([(kind, int) for kind in kinds]),)
+    idx = 0
     for rank, cat in enumerate(scores):
+        idx += 1
         for parts, kind in zip(eval(cats[cat][-1]), kinds):
             for part in parts:
                 rankings[kind][part] = max(rankings[kind][part], rank)
+        print(str(idx / len(scores)) + "%", str(idx) + "/" + str(len(scores)))
 
     # sort based on the rankings
     for kind in kinds:
@@ -415,8 +427,9 @@ def load(plist="parts.txt", comment="#"):
                 pk.dump(oparts, f, pk.HIGHEST_PROTOCOL)
             parts = [part for idx, part in nparts]
     except FileNotFoundError:
-        with open("." + plist, "wb") as f:
-            pk.dump(parts, f, pk.HIGHEST_PROTOCOL)
+        if False:
+            with open("." + plist, "wb") as f:
+                pk.dump(parts, f, pk.HIGHEST_PROTOCOL)
 
     # call write() to add to parts database
     write(parts)
@@ -468,6 +481,7 @@ def write(parts, database="database.pkl", init_size=50):
             ("modifier", "f2"),
         ],
     }
+    """
     try:
         with open(database, "rb") as f:
             db = pk.load(f)
@@ -475,6 +489,9 @@ def write(parts, database="database.pkl", init_size=50):
     except FileNotFoundError:
         db = {p: np.full(init_size, np.nan, dtype=fields[p]) for p in fields}
         print(database, "created")
+    """
+    db = {p: np.full(init_size, np.nan, dtype=fields[p]) for p in fields}
+    print(database, "created")
 
     # add part(s) to the database
     try:
